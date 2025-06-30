@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #define MAX_FRAMES 50
 
@@ -12,7 +11,7 @@ int main() {
     scanf("%d", &windowSize);
 
     int sentUpto = 0;
-    srand(time(NULL));
+    srand(0);  // fixed seed for predictable behavior
 
     while (sentUpto < totalFrames) {
         int windowEnd = sentUpto + windowSize;
@@ -22,14 +21,19 @@ int main() {
         for (int i = sentUpto; i < windowEnd; i++)
             printf("[%d] ", i);
 
-        // Simulate random ACK loss
-        int ackLoss = rand() % (windowEnd - sentUpto);  // loss within window
-        int ackFrame = sentUpto + ackLoss;
+        // Simulate whether ACK is lost or not
+        int ackLoss = rand() % 2;  // 0 = no loss, 1 = loss
 
-        printf("\nACK lost for Frame %d. Go-Back-N triggered.\n", ackFrame);
-        printf("Resending from Frame %d...\n", ackFrame);
-
-        sentUpto = ackFrame;  // Go back to that frame
+        if (ackLoss) {
+            int ackFrame = sentUpto + rand() % (windowEnd - sentUpto);
+            printf("\nACK lost for Frame %d. Go-Back-N triggered.", ackFrame);
+            printf("\nResending from Frame %d...\n", ackFrame);
+            sentUpto = ackFrame;  // Go back to that frame
+        } else {
+            printf("\nAll ACKs received for current window.");
+            printf("\nSliding window forward.\n");
+            sentUpto = windowEnd;  // Move to next window
+        }
     }
 
     printf("\nAll frames sent successfully with Go-Back-N.\n");
